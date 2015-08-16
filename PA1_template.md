@@ -27,10 +27,21 @@ This assumes that the .zip file containing the data has been downloaded and extr
 
 
 
-```{r}
+
+```r
 actdata <- read.csv("./activity/activity.csv")
 summary(actdata)
+```
 
+```
+##      steps                date          interval     
+##  Min.   :  0.00   2012-10-01:  288   Min.   :   0.0  
+##  1st Qu.:  0.00   2012-10-02:  288   1st Qu.: 588.8  
+##  Median :  0.00   2012-10-03:  288   Median :1177.5  
+##  Mean   : 37.38   2012-10-04:  288   Mean   :1177.5  
+##  3rd Qu.: 12.00   2012-10-05:  288   3rd Qu.:1766.2  
+##  Max.   :806.00   2012-10-06:  288   Max.   :2355.0  
+##  NA's   :2304     (Other)   :15840
 ```
 
 ##Part 2: What is mean total number of steps taken per day?
@@ -39,15 +50,21 @@ In this step, the total number of steps taken per day is calculated. NA values a
 
 Mean and median of the total number of steps taken per day is also calculated and reported. 
 
-```{r}
+
+```r
 cleandata <- na.omit(actdata)
 totalsteps <- aggregate(cleandata$steps, by = list(cleandata$date), sum)
 hist(totalsteps$x, main = "Histogram of Daily Steps", xlab = "Daily Steps", ylab = "Number of Days")
+```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png) 
+
+```r
 stepmean <- mean(totalsteps$x)
 stepmedian <- median(totalsteps$x)
 ```
 
-The mean number of daily steps is **`r as.integer(stepmean)`**. The median number of daily steps is **`r stepmedian`**. 
+The mean number of daily steps is **10766**. The median number of daily steps is **10765**. 
 
 To get this reported inline in the text, I used the commands **r as.integer(stepmean)** and **r stepmedian** in the text, as shown in the lecture slides. I used the **as.integer** function to make the variable display cleaner.
 
@@ -57,19 +74,23 @@ Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and 
 
 
 
-```{r}
+
+```r
 totalstepsbytime <- aggregate(cleandata$steps, by = list(cleandata$interval), mean)
 plot(totalstepsbytime, type = 'l', main = "Mean daily number of steps by 5-minute intervals", xlab = "Time interval in military time (00:00 - 24:00)", ylab = "Number of steps")
 ```
 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
+
 
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r}
+
+```r
 maxsteps <- subset(totalstepsbytime, x == max(x))
 ```
 
-The interval with the greatest number of average steps is `r maxsteps$Group.1`, which has `r maxsteps$x` steps.
+The interval with the greatest number of average steps is 835, which has 206.1698113 steps.
 
 ## Part 4: Impute missing values
 
@@ -80,15 +101,17 @@ Note that there are a number of days/intervals where there are missing values (c
 The first step is to calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
 
 
-```{r}
+
+```r
 NArows <- sum(is.na(actdata$steps))
 ```
 
-The number of rows with missing step data is **`r NArows`**.
+The number of rows with missing step data is **2304**.
 
 The following algorithm uses the daily average steps for a given value as the imputed value for filling in NAs to provide a dataset that has no NAs in the step values we are looking at. 
 
-```{r}
+
+```r
 noNAdata <- actdata
 noNAdata$mean <- totalstepsbytime$x
 noNAdata$imputed <- ifelse(is.na(noNAdata$steps), noNAdata$mean, noNAdata$steps)
@@ -96,21 +119,25 @@ noNAdata$imputed <- ifelse(is.na(noNAdata$steps), noNAdata$mean, noNAdata$steps)
 
 The next step is to make a histogram of the total number of steps taken each day. 
 
-```{r}
+
+```r
 totalStepsImputed <- aggregate(noNAdata$imputed, by = list(noNAdata$date), sum)
 hist(totalStepsImputed$x, main = "Histogram of Daily Steps with Imputed Data", xlab = "Daily Steps", ylab = "Number of Days")
 ```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+
 The next step is to calculate and report the mean and median total number of steps taken per day on the dataset with the imputed data, and compare them against the estimates from the data set with the NAs intact.  
 
-```{r}
+
+```r
 stepmeanImputed <- mean(totalStepsImputed$x)
 stepmedianImputed <- median(totalStepsImputed$x)
 meandiff <- stepmean - stepmeanImputed
 mediandiff <- stepmedian - stepmedianImputed
 ```
 
-The daily mean with the imputed data is **`r as.integer(stepmeanImputed)`**, and the daily median with the imputed data is **`r as.integer(stepmedianImputed)`**. The difference between the non-imputed and imputed mean is **`r meandiff`** and the difference between the non-imputed and imputed median is **`r mediandiff`**. Because I'm replacing the NAs with the mean number of steps for each interval, and because the NAs seem to be mostly because the device was not worn on a particular day (providing 24 hour gaps in the data), there is almost no difference between the numbers for the original data set and the data set with imputed values.
+The daily mean with the imputed data is **10766**, and the daily median with the imputed data is **10766**. The difference between the non-imputed and imputed mean is **0** and the difference between the non-imputed and imputed median is **-1.1886792**. Because I'm replacing the NAs with the mean number of steps for each interval, and because the NAs seem to be mostly because the device was not worn on a particular day (providing 24 hour gaps in the data), there is almost no difference between the numbers for the original data set and the data set with imputed values.
 
 ##Part 5: Are there differences in activity patterns between weekdays and weekends?
 
@@ -120,11 +147,29 @@ Step 1: Create a new factor variable in the dataset with two levels - "weekday" 
 
 
 
-```{r}
+
+```r
 noNAdata$dayofweek <- as.POSIXlt(noNAdata$date)$wday
 noNAdata$isWeekday <- as.factor(ifelse(noNAdata$dayofweek > 0 && noNAdata$dayofweek < 6, "weekday", "weekend"))
 head(noNAdata)
+```
+
+```
+##   steps       date interval      mean   imputed dayofweek isWeekday
+## 1    NA 2012-10-01        0 1.7169811 1.7169811         1   weekday
+## 2    NA 2012-10-01        5 0.3396226 0.3396226         1   weekday
+## 3    NA 2012-10-01       10 0.1320755 0.1320755         1   weekday
+## 4    NA 2012-10-01       15 0.1509434 0.1509434         1   weekday
+## 5    NA 2012-10-01       20 0.0754717 0.0754717         1   weekday
+## 6    NA 2012-10-01       25 2.0943396 2.0943396         1   weekday
+```
+
+```r
 class(noNAdata$isWeekday)
+```
+
+```
+## [1] "factor"
 ```
 
 Step 2: Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
